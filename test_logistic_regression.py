@@ -18,7 +18,7 @@ def score_logistic(X, y, C):
 
 dataset = panda.read_csv("evidance_event_android.csv")
 
-trg = dataset['process_orderSendSuccess_event']
+trg = dataset['process_orderSendSuccess_event'].replace(2, 1)
 trn = dataset.drop(['process_orderSendSuccess_event','android_id','event_datetime'], axis=1)
 #toto = trg.index()
 #togo = trn.index()

@@ -22,7 +22,7 @@ models = [LinearRegression(), # метод наименьших квадрато
 	          SVR(kernel='linear'), # метод опорных векторов с линейным ядром
 	          LogisticRegression() # логистическая регрессия
 	          ]
-trg = dataset['process_orderSendSuccess_event']
+trg = dataset['process_orderSendSuccess_event'].replace(2, 1)
 trn = dataset.drop(['process_orderSendSuccess_event','android_id','event_datetime'], axis=1)
 Xtrn, Xtest, Ytrn, Ytest = train_test_split(trn, trg, test_size=0.4)
 #создаем временные структуры
