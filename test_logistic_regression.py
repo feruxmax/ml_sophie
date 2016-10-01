@@ -12,7 +12,7 @@ from sklearn.cross_validation import *
 def score_logistic(X, y, C):
     clf = LogisticRegression(penalty='l2', C=C)
     kf = KFold(y.size, n_folds=5, shuffle=True, random_state=1)
-    score = cross_val_score(clf, X, y, scoring='roc_auc', cv=kf, n_jobs=-1)    
+    score = cross_val_score(clf, X, y, scoring='roc_auc', cv=kf)    
     return score.mean()
 
 
@@ -22,7 +22,7 @@ trg = dataset['process_orderSendSuccess_event']
 trn = dataset.drop(['process_orderSendSuccess_event','android_id','event_datetime'], axis=1)
 #toto = trg.index()
 #togo = trn.index()
-rezult = score_logistic(trn, trg, 0.005)
+rezult = score_logistic(trn, trg, 0.5)
 print(rezult)
 '''    
 scaler = StandardScaler()
