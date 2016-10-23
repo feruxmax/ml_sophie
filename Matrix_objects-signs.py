@@ -9,13 +9,15 @@ import pandas as panda
 from datetime import datetime
 
 data = panda.read_csv('events_android.csv') 
-date = data.event_datetime
+data.sort_values(by='event_datetime', inplace=True)
+data.reset_index(drop=True, inplace=True)
 
+date = data.event_datetime
 #Инициализируем первую дату в нашем документе 
 #Время не учитываем, только дата, соответственно далее работаем только по дням
 temp = date[0].split(' ')
 first_day = datetime.strptime(temp[0],'%Y-%m-%d')
-
+#%%
 #Осуществляем выборку, по действиям, которые совершали android_id(пользователи)
 #и удаляем повторяющиеся действия, для того чтобы создать список с ключами событий
 Sample = data['event_name'].drop_duplicates()
