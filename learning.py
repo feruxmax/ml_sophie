@@ -9,13 +9,10 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 
 
-def prepareXy(data, for_prev_day):
+def prepareXy(data):
     y = data['process_orderSendSuccess_event'].replace(2, 1).replace(3, 1)
     X = data.drop(['process_orderSendSuccess_event','ios_ifv','event_datetime'],
                  axis=1)
-    if(for_prev_day):
-        y = y.shift(-1)
-        y.iloc[-1] = 0
         
     return (X, y)
          
@@ -33,7 +30,7 @@ models = {"boosting": GradientBoostingClassifier(n_estimators=500, random_state=
           "logistic": LogisticRegression(penalty='l2', C=0.5)}
 
 dataset = pd.read_csv("evidance_event_ios.csv")
-X, y = prepareXy(dataset, for_prev_day=False)
+X, y = prepareXy(dataset)
 X = scale(X)           
 print(crossval(X, y, models['boosting'], 'precision').mean())
 print(crossval(X, y, models['boosting'], 'recall').mean())
