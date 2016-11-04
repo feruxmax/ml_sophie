@@ -80,4 +80,5 @@ for period_starts in date_list:
 # final clean
 features.fillna(0, inplace=True)
 features = features.set_index(['event_datetime','id'])
+features = features.reindex_axis(sorted(features.columns), axis=1)
 features.to_csv(OUTFILE, sep=',', header=True) 
