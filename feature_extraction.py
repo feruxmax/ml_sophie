@@ -35,9 +35,27 @@ def round_datetime(date_time, date_delta):
         rounded = rounded.replace(minute = 0, second=0)
 
     return rounded
+
+def features_on_interval(data, start, interval):
+    features = pd.DataFrame(columns = cols, index = [])
+    period_data = data[(start <= data['event_datetime']) &
+                       (data['event_datetime'] < start + interval)]
+    periods_ids = period_data['id'].unique()
     
+    for id in periods_ids:
+        ids_data4period = period_data[period_data['id'] == id]
+        events = ids_data4period['event_name'].value_counts()   
+        features.loc[len(features)] = events
+
+    if len(features) > 0 :
+        features['id'] = periods_ids                
+        features['event_datetime'] = \
+                round_datetime(period_data['event_datetime'].iloc[0], interval)
+    return features
+#%%     
 ###############################################################################
-FILENAME = 'events_android.csv'
+FILENAME = 'data/events_android.csv'
+OUTFILE = 'data/android.csv'
 PLATFORM = 'android'
 PERIOD = dt.timedelta(days=1)
 
@@ -56,25 +74,10 @@ end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD)
 date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
 #%% 
 for period_starts in date_list:
-    cur_features = pd.DataFrame(columns = cols, index = [])
-    cur_period_data = data[(period_starts <= data['event_datetime']) &
-                           (data['event_datetime'] < period_starts + PERIOD)]
-    periods_ids = cur_period_data['id'].unique()
-    
-    # cycle over ids in period
-    for id in periods_ids:
-        ids_data4period = cur_period_data[cur_period_data['id'] == id]
-        events = ids_data4period['event_name'].value_counts()   
-        cur_features.loc[len(cur_features)] = events
-    
-    if len(cur_features) > 0 :
-        cur_features['id'] = periods_ids                
-        cur_features['event_datetime'] = \
-                round_datetime(cur_period_data['event_datetime'].iloc[0], PERIOD)
-
+    cur_features = features_on_interval(data, period_starts, PERIOD)
     features = features.append(cur_features, ignore_index=True)
 
 # final clean
 features.fillna(0, inplace=True)
 features = features.set_index(['event_datetime','id'])
-features.to_csv("1.csv", sep=',', header=True) 
+features.to_csv(OUTFILE, sep=',', header=True) 
