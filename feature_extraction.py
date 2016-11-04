@@ -35,9 +35,15 @@ def round_datetime(date_time, date_delta):
         rounded = rounded.replace(minute = 0, second=0)
 
     return rounded
+    
+def get_hours(time_delta):
+    return 24*time_delta.days + time_delta.seconds//3600
 
 def features_on_interval(data, start, interval):
     features = pd.DataFrame(columns = cols, index = [])
+    if(interval == 0):
+        return features
+    
     period_data = data[(start <= data['event_datetime']) &
                        (data['event_datetime'] < start + interval)]
     periods_ids = period_data['id'].unique()
@@ -77,11 +83,12 @@ def delay_target(cur_f, next_f):
     return cur_f
 #%%     
 ###############################################################################
-FILENAME = 'data/events_android.csv'
-OUTFILE = 'data/android.csv'
-PLATFORM = 'android'
-PERIOD = dt.timedelta(days=1)
-DELAY = 1 # 1 PERIOD
+PERIOD = dt.timedelta(hours=2)
+DELAY = 1 # PERIODs
+PLATFORM = 'ios'
+FILENAME = "data/events_%s.csv" % (PLATFORM)
+OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(PERIOD), DELAY)
+
 # input data
 data = pd.read_csv(FILENAME)
 data = prepare_data(data)
@@ -93,7 +100,7 @@ features = pd.DataFrame(columns = cols, index = [])
 
 # cycle over date-time periods
 first_date = round_datetime(data['event_datetime'].iloc[0], PERIOD)
-end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD) - PERIOD
+end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD) - PERIOD*DELAY
 date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
 #%% 
 for period_starts in date_list:
