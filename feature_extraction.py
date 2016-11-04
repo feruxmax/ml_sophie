@@ -44,7 +44,7 @@ def features_on_interval(data, start, interval):
     
     for id in periods_ids:
         ids_data4period = period_data[period_data['id'] == id]
-        events = ids_data4period['event_name'].value_counts()   
+        events = ids_data4period['event_name'].value_counts()
         features.loc[len(features)] = events
 
     if len(features) > 0 :
@@ -52,13 +52,36 @@ def features_on_interval(data, start, interval):
         features['event_datetime'] = \
                 round_datetime(period_data['event_datetime'].iloc[0], interval)
     return features
+    
+def delay_target(cur_f, next_f):
+    if len(cur_f) == 0 or len(next_f) == 0:
+        return cur_f
+        
+    cur_f.set_index('id', inplace=True)
+    next_f.set_index('id', inplace=True)
+    cur_datetime = cur_f['event_datetime'].iloc[0]
+    target = next_f['process_orderSendSuccess_event'].copy().dropna()
+
+    if len(target) > 0:
+        new_ids = set(target.index) - set(cur_f.index)
+
+        # append new ids
+        for id in new_ids:
+            new_row = pd.Series([cur_datetime, 1], 
+                          index=['event_datetime', 'process_orderSendSuccess_event'])
+            cur_f.loc[id] = new_row
+
+        # update target
+        cur_f['process_orderSendSuccess_event'] = target
+    cur_f.reset_index(level=0, inplace=True)
+    return cur_f
 #%%     
 ###############################################################################
 FILENAME = 'data/events_android.csv'
 OUTFILE = 'data/android.csv'
 PLATFORM = 'android'
 PERIOD = dt.timedelta(days=1)
-
+DELAY = 1 # 1 PERIOD
 # input data
 data = pd.read_csv(FILENAME)
 data = prepare_data(data)
@@ -70,15 +93,19 @@ features = pd.DataFrame(columns = cols, index = [])
 
 # cycle over date-time periods
 first_date = round_datetime(data['event_datetime'].iloc[0], PERIOD)
-end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD)
+end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD) - PERIOD
 date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
 #%% 
 for period_starts in date_list:
     cur_features = features_on_interval(data, period_starts, PERIOD)
-    features = features.append(cur_features, ignore_index=True)
+    next_features = features_on_interval(data, period_starts + DELAY*PERIOD, PERIOD)
+    delayd_features = delay_target(cur_features, next_features)
+    features = features.append(delayd_features, ignore_index=True)
 
-# final clean
+# clean
 features.fillna(0, inplace=True)
+
+# out
 features = features.set_index(['event_datetime','id'])
 features = features.reindex_axis(sorted(features.columns), axis=1)
 features.to_csv(OUTFILE, sep=',', header=True) 
