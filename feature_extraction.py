@@ -78,6 +78,7 @@ def delay_target(cur_f, next_f):
         # update target
         cur_f['process_orderSendSuccess_event'] = target
     cur_f.reset_index(level=0, inplace=True)
+    next_f.reset_index(level=0, inplace=True)
     return cur_f
 #%%     
 ###############################################################################
@@ -99,13 +100,14 @@ features = pd.DataFrame(columns = cols, index = [])
 # cycle over date-time periods
 first_date = round_datetime(data['event_datetime'].iloc[0], PERIOD)
 end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD) - PERIOD*DELAY
-date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
+date_list = [first_date + (1+x)*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
 #%% 
+prev_features = features_on_interval(data, first_date, PERIOD)
 for period_starts in date_list:
-    cur_features = features_on_interval(data, period_starts, PERIOD)
     next_features = features_on_interval(data, period_starts + DELAY*PERIOD, PERIOD)
-    delayd_features = delay_target(cur_features, next_features)
+    delayd_features = delay_target(prev_features, next_features)
     features = features.append(delayd_features, ignore_index=True)
+    prev_features = next_features
 
 # clean
 features.fillna(0, inplace=True)
