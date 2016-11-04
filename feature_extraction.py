@@ -41,8 +41,6 @@ def get_hours(time_delta):
 
 def features_on_interval(data, start, interval):
     features = pd.DataFrame(columns = cols, index = [])
-    if(interval == 0):
-        return features
     
     period_data = data[(start <= data['event_datetime']) &
                        (data['event_datetime'] < start + interval)]
