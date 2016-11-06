@@ -69,16 +69,18 @@ def fill_target(cur_f, next_f):
     return cur_f
 #%%     
 ###############################################################################
-T = dt.timedelta(hours=2)
+T = dt.timedelta(hours=1)
 DELAY = 1 # Ts
 PLATFORM = 'ios'
-FILENAME = "data/events_%s.csv" % (PLATFORM)
+INFILE = "data/events_%s.csv" % (PLATFORM)
 OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(T), DELAY)
 SOURCE_TARGET = 'process_orderSendSuccess_event'
 TARGET = '_target'
 
+print("extractions ", OUTFILE)
+
 # input data
-data = pd.read_csv(FILENAME)
+data = pd.read_csv(INFILE)
 data = prepare_data(data)
 
 # for output data
