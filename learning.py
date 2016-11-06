@@ -9,9 +9,8 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 
 def prepareXy(data):
-    y = data['process_orderSendSuccess_event'].replace(2, 1).replace(3, 1)
-    X = data.drop(['process_orderSendSuccess_event','id','event_datetime'],
-                 axis=1)
+    y = data[TARGET].replace(2, 1).replace(3, 1)
+    X = data.drop([TARGET,'id','event_datetime'], axis=1)
         
     return (X, y)
          
@@ -25,6 +24,7 @@ def scale(X):
     return scaler.fit_transform(X)
     
 ###############################################################################
+TARGET = '_target'
 models = {"boosting": GradientBoostingClassifier(n_estimators=500, random_state=241),
           "logistic": LogisticRegression(penalty='l2', C=0.5)}
 
