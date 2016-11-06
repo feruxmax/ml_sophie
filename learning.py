@@ -28,12 +28,14 @@ TARGET = '_target'
 T = 2 # hours
 DELAY = 1 # Ts
 PLATFORM = 'ios'
-FILENAME = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, T, DELAY)
+INFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, T, DELAY)
 
 models = {"boosting": GradientBoostingClassifier(n_estimators=500, random_state=241),
           "logistic": LogisticRegression(penalty='l2', C=0.5)}
 
-dataset = pd.read_csv("data/ios_T=2h_d=1T.csv")
+print("learning ", INFILE)
+
+dataset = pd.read_csv(INFILE)
 X, y = prepareXy(dataset)
 #X = scale(X)           
 print("presision: ", crossval(X, y, models['boosting'], 'precision').mean())
