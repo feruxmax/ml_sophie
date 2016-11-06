@@ -42,19 +42,19 @@ def get_hours(time_delta):
 def features_on_interval(data, start, interval):
     features = pd.DataFrame(columns = cols, index = [])
     
-    period_data = data[(start <= data['event_datetime']) &
+    interval_data = data[(start <= data['event_datetime']) &
                        (data['event_datetime'] < start + interval)]
-    periods_ids = period_data['id'].unique()
+    interval_ids = interval_data['id'].unique()
     
-    for id in periods_ids:
-        ids_data4period = period_data[period_data['id'] == id]
-        events = ids_data4period['event_name'].value_counts()
+    for id in interval_ids:
+        ids_data4interval = interval_data[interval_data['id'] == id]
+        events = ids_data4interval['event_name'].value_counts()
         features.loc[len(features)] = events
 
     if len(features) > 0 :
-        features['id'] = periods_ids                
+        features['id'] = interval_ids                
         features['event_datetime'] = \
-                round_datetime(period_data['event_datetime'].iloc[0], interval)
+                round_datetime(interval_data['event_datetime'].iloc[0], interval)
     return features
     
 def fill_target(cur_f, next_f):
@@ -69,11 +69,11 @@ def fill_target(cur_f, next_f):
     return cur_f
 #%%     
 ###############################################################################
-PERIOD = dt.timedelta(hours=2)
-DELAY = 1 # PERIODs
+T = dt.timedelta(hours=2)
+DELAY = 1 # Ts
 PLATFORM = 'ios'
 FILENAME = "data/events_%s.csv" % (PLATFORM)
-OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(PERIOD), DELAY)
+OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(T), DELAY)
 SOURCE_TARGET = 'process_orderSendSuccess_event'
 TARGET = '_target'
 
@@ -86,14 +86,14 @@ cols = ['event_datetime', 'id', TARGET]
 cols.extend(data['event_name'].unique().tolist())
 features = pd.DataFrame(columns = cols, index = [])
 
-# cycle over date-time periods
-first_date = round_datetime(data['event_datetime'].iloc[0], PERIOD)
-end_date = round_datetime(data['event_datetime'].iloc[-1], PERIOD) - PERIOD*DELAY
-date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD)//PERIOD)]
+# cycle over date-time intervals
+first_date = round_datetime(data['event_datetime'].iloc[0], T)
+end_date = round_datetime(data['event_datetime'].iloc[-1], T) - T*DELAY
+date_list = [first_date + x*T for x in range(0, (end_date-first_date+T)//T)]
 #%% 
-for period_starts in date_list:
-    cur_features = features_on_interval(data, period_starts, PERIOD)
-    next_features = features_on_interval(data, period_starts + DELAY*PERIOD, PERIOD)
+for interval_starts in date_list:
+    cur_features = features_on_interval(data, interval_starts, T)
+    next_features = features_on_interval(data, interval_starts + DELAY*T, T)
     delayd_features = fill_target(cur_features, next_features)
     features = features.append(delayd_features, ignore_index=True)
 
