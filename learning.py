@@ -25,6 +25,11 @@ def scale(X):
     
 ###############################################################################
 TARGET = '_target'
+T = 2 # hours
+DELAY = 1 # Ts
+PLATFORM = 'ios'
+FILENAME = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, T, DELAY)
+
 models = {"boosting": GradientBoostingClassifier(n_estimators=500, random_state=241),
           "logistic": LogisticRegression(penalty='l2', C=0.5)}
 
