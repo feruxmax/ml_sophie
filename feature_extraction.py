@@ -57,26 +57,14 @@ def features_on_interval(data, start, interval):
                 round_datetime(period_data['event_datetime'].iloc[0], interval)
     return features
     
-def delay_target(cur_f, next_f):
+def fill_target(cur_f, next_f):
     if len(cur_f) == 0 or len(next_f) == 0:
         return cur_f
         
     cur_f.set_index('id', inplace=True)
     next_f.set_index('id', inplace=True)
-    cur_datetime = cur_f['event_datetime'].iloc[0]
-    target = next_f['process_orderSendSuccess_event'].copy().dropna()
-
-    if len(target) > 0:
-        new_ids = set(target.index) - set(cur_f.index)
-
-        # append new ids
-        for id in new_ids:
-            new_row = pd.Series([cur_datetime, 1], 
-                          index=['event_datetime', 'process_orderSendSuccess_event'])
-            cur_f.loc[id] = new_row
-
-        # update target
-        cur_f['process_orderSendSuccess_event'] = target
+    
+    cur_f[TARGET] = next_f[SOURCE_TARGET]
     cur_f.reset_index(level=0, inplace=True)
     return cur_f
 #%%     
@@ -86,13 +74,15 @@ DELAY = 1 # PERIODs
 PLATFORM = 'ios'
 FILENAME = "data/events_%s.csv" % (PLATFORM)
 OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(PERIOD), DELAY)
+SOURCE_TARGET = 'process_orderSendSuccess_event'
+TARGET = '_target'
 
 # input data
 data = pd.read_csv(FILENAME)
 data = prepare_data(data)
 
 # for output data
-cols = ['event_datetime', 'id']
+cols = ['event_datetime', 'id', TARGET]
 cols.extend(data['event_name'].unique().tolist())
 features = pd.DataFrame(columns = cols, index = [])
 
@@ -104,13 +94,14 @@ date_list = [first_date + x*PERIOD for x in range(0, (end_date-first_date+PERIOD
 for period_starts in date_list:
     cur_features = features_on_interval(data, period_starts, PERIOD)
     next_features = features_on_interval(data, period_starts + DELAY*PERIOD, PERIOD)
-    delayd_features = delay_target(cur_features, next_features)
+    delayd_features = fill_target(cur_features, next_features)
     features = features.append(delayd_features, ignore_index=True)
 
 # clean
 features.fillna(0, inplace=True)
 
 # out
+features.rename(columns={SOURCE_TARGET:'_buy'}, inplace=True)
 features = features.set_index(['event_datetime','id'])
 features = features.reindex_axis(sorted(features.columns), axis=1)
 features.to_csv(OUTFILE, sep=',', header=True) 
