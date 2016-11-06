@@ -35,7 +35,8 @@ print("presision: ", crossval(X, y, models['boosting'], 'precision').mean())
 print("recall: ", crossval(X, y, models['boosting'], 'recall').mean())
 
 #%% 
-X_learn, X_test, y_learn, y_test = train_test_split(X, y, test_size=0.4)
+X_learn, X_test, y_learn, y_test = train_test_split(X, y, test_size=0.3)
 models["boosting"].fit(X_learn, y_learn)
 forest_pred = models["boosting"].predict(X_test)
 print("accuracy: ", accuracy_score(forest_pred, y_test))
+print(y.value_counts())
