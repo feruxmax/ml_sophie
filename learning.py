@@ -10,9 +10,11 @@ from sklearn.linear_model import LogisticRegression
 
 def prepareXy(data):
     y = data[TARGET].replace(2, 1).replace(3, 1)
-    X = data.drop([TARGET,'id','event_datetime'], axis=1)
-        
-    return (X, y)
+    data.drop([TARGET, 'event_datetime'], axis=1, inplace=True)
+    ids = data['id'].astype('category')
+    data['id'] = ids.cat.codes
+
+    return (data, y)
          
 def crossval(X, y, clf, scoring):
     kf = KFold(y.size, n_folds=5, shuffle=True, random_state=1)
