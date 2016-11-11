@@ -3,6 +3,7 @@ from sklearn.cross_validation import KFold
 from sklearn.cross_validation import cross_val_score
 from sklearn.cross_validation import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
 from sklearn.preprocessing import StandardScaler
 
 from sklearn.ensemble import GradientBoostingClassifier
@@ -42,10 +43,14 @@ X, y = prepareXy(dataset)
 #X = scale(X)           
 print("presision: ", crossval(X, y, models['boosting'], 'precision').mean())
 print("recall: ", crossval(X, y, models['boosting'], 'recall').mean())
-
+print("roc_auc: ", crossval(X, y, models['boosting'], 'roc_auc').mean())
 #%% 
 X_learn, X_test, y_learn, y_test = train_test_split(X, y, test_size=0.3)
 models["boosting"].fit(X_learn, y_learn)
 forest_pred = models["boosting"].predict(X_test)
 print("accuracy: ", accuracy_score(forest_pred, y_test))
-print(y.value_counts())
+pred = pd.Series(forest_pred)
+print('test: \n', y_test.value_counts())
+print('pred: \n', pred.value_counts())
+print('all:  \n', y.value_counts())
+print("precision: ", precision_score(forest_pred, y_test))
