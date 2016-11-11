@@ -40,6 +40,9 @@ print("learning ", INFILE)
 
 dataset = pd.read_csv(INFILE)
 X, y = prepareXy(dataset)
+ctrl = X[['news_pushNews_screen', 'shop_addItem_event',
+          'shop_productInfo_event','shop_screen']]
+#%%
 #X = scale(X)           
 print("presision: ", crossval(X, y, models['boosting'], 'precision').mean())
 print("recall: ", crossval(X, y, models['boosting'], 'recall').mean())
@@ -47,6 +50,10 @@ print("roc_auc: ", crossval(X, y, models['boosting'], 'roc_auc').mean())
 #%% 
 X_learn, X_test, y_learn, y_test = train_test_split(X, y, test_size=0.3)
 models["boosting"].fit(X_learn, y_learn)
+proba = models["boosting"].predict_proba(X_test)[:, 1]
+y_test = y_test.reset_index(drop=True)
+#%%
+
 forest_pred = models["boosting"].predict(X_test)
 print("accuracy: ", accuracy_score(forest_pred, y_test))
 pred = pd.Series(forest_pred)
