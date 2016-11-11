@@ -28,10 +28,11 @@ def scale(X):
     
 ###############################################################################
 TARGET = '_target'
-T = 2 # hours
+T = 24 # hours
 DELAY = 1 # Ts
+INTEGRAL = 7
 PLATFORM = 'ios'
-INFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, T, DELAY)
+INFILE = "data/%s_T=%sh_d=%dT_int=%s.csv" % (PLATFORM, T, DELAY, INTEGRAL)
 
 models = {"boosting": GradientBoostingClassifier(n_estimators=500, random_state=241),
           "logistic": LogisticRegression(penalty='l2', C=0.5)}

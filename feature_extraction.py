@@ -67,13 +67,39 @@ def fill_target(cur_f, next_f):
     cur_f[TARGET] = next_f[SOURCE_TARGET]
     cur_f.reset_index(level=0, inplace=True)
     return cur_f
+    
+def sum_features_for(features, i, T):
+    user_id =  features['id'].iloc[i]
+    end_date = features['event_datetime'].iloc[i]
+    first_date = end_date - T
+
+    interval_features = features[(features['id'] == user_id) &
+                                 (first_date <= features['event_datetime']) &
+                                 (features['event_datetime'] < end_date)]
+
+    sum_events = interval_features.sum(axis=0)
+    sum_events.drop('_target', axis=0, inplace=True)
+    sum_events.index = sum_events.index + '_'
+    features.iloc[i].append(sum_events)
+    return features.iloc[i].append(sum_events)
+
+def add_last(features, T):   
+    _cols = cols.append(events + '_')
+    n_features = pd.DataFrame(columns = _cols, index = [])
+
+    for i in features.index:
+        new_row = sum_features_for(features, i, T)
+        n_features.loc[i] = new_row
+
+    return n_features
 #%%     
 ###############################################################################
-T = dt.timedelta(hours=1)
+T = dt.timedelta(hours=24)
 DELAY = 1 # Ts
+INTEGRAL = 7
 PLATFORM = 'ios'
 INFILE = "data/events_%s.csv" % (PLATFORM)
-OUTFILE = "data/%s_T=%sh_d=%dT.csv" % (PLATFORM, get_hours(T), DELAY)
+OUTFILE = "data/%s_T=%sh_d=%dT_int=%s.csv" % (PLATFORM, get_hours(T), DELAY, INTEGRAL)
 SOURCE_TARGET = 'process_orderSendSuccess_event'
 TARGET = '_target'
 
@@ -84,8 +110,9 @@ data = pd.read_csv(INFILE)
 data = prepare_data(data)
 
 # for output data
-cols = ['event_datetime', 'id', TARGET]
-cols.extend(data['event_name'].unique().tolist())
+cols = pd.Series(['event_datetime', 'id', TARGET])
+events = pd.Series(data['event_name'].unique())
+cols = cols.append(events)
 features = pd.DataFrame(columns = cols, index = [])
 
 # cycle over date-time intervals
@@ -101,9 +128,12 @@ for interval_starts in date_list:
 
 # clean
 features.fillna(0, inplace=True)
-
+ 
+if(INTEGRAL>0):
+    features = add_last(features, dt.timedelta(days=INTEGRAL))
+#%%
 # out
-features.rename(columns={SOURCE_TARGET:'_buy'}, inplace=True)
+features.rename(columns={SOURCE_TARGET:'_buy', SOURCE_TARGET+'_':'_buy_'}, inplace=True)
 features = features.set_index(['event_datetime','id'])
 features = features.reindex_axis(sorted(features.columns), axis=1)
 features.to_csv(OUTFILE, sep=',', header=True) 
